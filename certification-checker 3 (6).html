@@ -1,0 +1,64 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Certification Checker</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 500px; margin: 40px auto; text-align: center; }
+    input { padding: 10px; width: 80%; margin-bottom: 10px; }
+    button { padding: 10px 20px; cursor: pointer; }
+    #result { margin-top: 20px; font-size: 18px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>Check Your Certification Status</h2>
+  <input type="email" id="emailInput" placeholder="Enter your Auburn email" />
+  <br />
+  <button onclick="checkCertification()">Check Certification</button>
+  <p id="result"></p>
+
+  <script>
+    // Pre-hashed email => certification status map (SHA-256 hashed emails)
+    const certMap = {
+      "773ab8bddfad58c250254614eb053bdabda8050b634e15b81424133fb3a90f21": "✅",
+      "2cf50d1bb5d61da09c0651212c4ac83e5a21610ef85c6765515a8d8030f41b62": "✅",
+      "05fcfc4338719b69cb11b80045ddf4ff0229f5508cc5f8e8eda188ea7a28036b": ""
+    };
+
+    async function hashEmail(email) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(email.toLowerCase().trim());
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function checkCertification() {
+      const input = document.getElementById("emailInput").value.trim();
+      const result = document.getElementById("result");
+
+      if (!input) {
+        result.textContent = "Please enter a valid email address.";
+        result.style.color = "orange";
+        return;
+      }
+
+      const hash = await hashEmail(input);
+      const status = certMap[hash];
+
+      if (status === undefined) {
+        result.textContent = "⚠️ Email not found.";
+        result.style.color = "darkorange";
+      } else if (status === "✅") {
+        result.textContent = "✅ You are certified!";
+        result.style.color = "green";
+      } else {
+        result.textContent = "❌ You are not certified.";
+        result.style.color = "red";
+      }
+    }
+  </script>
+</body>
+</html>
